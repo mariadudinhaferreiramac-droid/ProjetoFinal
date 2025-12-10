@@ -34,7 +34,13 @@ public class PlayerHealth : MonoBehaviour
     {
         if (currentHealth <= 0) return; // já morto
 
-        currentHealth -= damage;
+        if (ScoreManager.Instance != null)
+       {
+         ScoreManager.Instance.RemovePoints(1);
+       }  
+
+        currentHealth -= damage; 
+
         if (anim != null)
         {
             anim.SetTrigger("Hurt");

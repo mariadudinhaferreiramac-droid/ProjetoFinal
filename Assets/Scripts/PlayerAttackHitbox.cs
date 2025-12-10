@@ -6,13 +6,24 @@ public class PlayerAttackHitbox : MonoBehaviour
 {
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.CompareTag("Enemy"))
+        if (!collision.CompareTag("Enemy"))
+            return;
+
+        // Zumbi
+        EnemyHealth enemy = collision.GetComponent<EnemyHealth>();
+
+        
+        if (enemy != null)
         {
-            EnemyHealth enemy = collision.GetComponent<EnemyHealth>();
-            if (enemy != null)
-            {
-                enemy.TakeDamage(1);
-            }
+            enemy.TakeDamage(1);
+            return;
+        }
+
+        // Boss
+        BossHealth boss = collision.GetComponent<BossHealth>();
+        if (boss != null)
+        {
+            boss.TakeDamage(1);
         }
     }
 }

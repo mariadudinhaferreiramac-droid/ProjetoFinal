@@ -37,6 +37,12 @@ public class DeathMenu : MonoBehaviour
         if (isShowing) return;
         isShowing = true;
 
+            // ✅ Salva a pontuação atual no ranking antes de mostrar o menu
+        if (ScoreManager.Instance != null)
+        {
+            ScoreManager.Instance.SaveCurrentScore();
+        }
+
         if (overlay != null)
         {
             overlay.gameObject.SetActive(true); // ativa painel visual

@@ -21,13 +21,15 @@ public class PlayerController : MonoBehaviour
     public string cena;
 
     private SpriteRenderer spriteRenderer;
+
+    // Hitbox do ataque (ATIVADA pela animação)
     public GameObject attackHitbox;
 
-    public float knockbackForce = 5f; 
-    public float knockbackDuration = 0.2f; 
+    public float knockbackForce = 5f;
+    public float knockbackDuration = 0.2f;
 
-    public int maxCombo = 2;       
-    public float comboCooldown = 1f; 
+    public int maxCombo = 2;
+    public float comboCooldown = 1f;
     private int comboCounter = 0;
     private bool canAttack = true;
 
@@ -49,16 +51,12 @@ public class PlayerController : MonoBehaviour
             if (Input.GetKeyDown(KeyCode.Mouse0))
             {
                 if (canAttack)
-                {
                     PlayerAttack();
-                }
             }
         }
 
         if (Input.GetKeyDown(KeyCode.Escape))
-        {
             PauseScreen();
-        }
     }
 
     public void PauseScreen()
@@ -83,24 +81,20 @@ public class PlayerController : MonoBehaviour
 
     public void BackToMenu()
     {
-        SceneManager.LoadScene(cena);
+        SceneManager.LoadScene(0);
     }
 
     private void FixedUpdate()
     {
-        if(_playerDirection.x != 0 || _playerDirection.y != 0)
-        {
-            _isWalk = true;
-        }
-        else
-        {
-            _isWalk = false;
-        }
+        _isWalk = (_playerDirection.x != 0 || _playerDirection.y != 0);
 
         if (!isKnockedBack)
         {
-            _playerRigidbody2D.MovePosition(_playerRigidbody2D.position + _playerDirection.normalized * _playerSpeed * Time.fixedDeltaTime);
+            _playerRigidbody2D.MovePosition(
+                _playerRigidbody2D.position + _playerDirection.normalized * _playerSpeed * Time.fixedDeltaTime
+            );
         }
+
         UpdateSortingOrder();
     }
 
@@ -115,13 +109,9 @@ public class PlayerController : MonoBehaviour
         _playerDirection = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
 
         if (_playerDirection.x < 0 && _playerFaceRight)
-        {
             Flip();
-        }
         else if (_playerDirection.x > 0 && !_playerFaceRight)
-        {
             Flip();
-        }
     }
 
     void UpdateAnimator()
@@ -153,15 +143,15 @@ public class PlayerController : MonoBehaviour
 
     IEnumerator EndAttackAndHandleCombo()
     {
-
         yield return new WaitForSeconds(0.5f);
+
         attackHitbox.SetActive(false);
         _isAttacking = false;
 
         if (comboCounter >= maxCombo)
         {
             yield return new WaitForSeconds(comboCooldown);
-            comboCounter = 0; 
+            comboCounter = 0;
         }
 
         canAttack = true;
