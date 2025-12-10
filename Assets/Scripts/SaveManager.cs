@@ -20,14 +20,14 @@ public class SaveManager : MonoBehaviour
         public float playerX;
         public float playerY;
 
-        public int playerHealth;   // <<< VIDA SALVA AQUI
-
         public List<EnemySave> enemies = new List<EnemySave>();
     }
 
     private string savePath;
 
+    // Guardamos o listener para poder remover depois.
     private UnityEngine.Events.UnityAction<Scene, LoadSceneMode> sceneLoadCallback;
+
 
     private void Awake()
     {
@@ -40,17 +40,15 @@ public class SaveManager : MonoBehaviour
     public void SaveGame()
     {
         GameObject player = GameObject.FindGameObjectWithTag("Player");
-        PlayerHealth ph = player.GetComponent<PlayerHealth>();
 
         SaveData data = new SaveData();
         data.sceneName = SceneManager.GetActiveScene().name;
         data.playerX = player.transform.position.x;
         data.playerY = player.transform.position.y;
 
-        data.playerHealth = ph.currentHealth; // <<< SALVA A VIDA
-
         // Salvar inimigos
         GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+
         foreach (GameObject e in enemies)
         {
             EnemyHealth eh = e.GetComponent<EnemyHealth>();
@@ -60,11 +58,12 @@ public class SaveManager : MonoBehaviour
             save.x = e.transform.position.x;
             save.y = e.transform.position.y;
             save.isDead = eh.isDead;
+
             data.enemies.Add(save);
         }
 
         File.WriteAllText(savePath, JsonUtility.ToJson(data, true));
-        Debug.Log("💾 Jogo salvo incluindo inimigos e vida do player!");
+        Debug.Log("💾 Jogo salvo incluindo inimigos!");
     }
 
     // ============================
@@ -72,40 +71,31 @@ public class SaveManager : MonoBehaviour
     // ============================
     public void LoadGame()
     {
-        if (!File.Exists(savePath))
-        {
-            Debug.Log("❌ Nenhum save disponível");
-            return;
-        }
+        if (!File.Exists(Application.persistentDataPath + "/save.json"))
+{
+    Debug.Log("❌ Nenhum save disponível");
+    return;
+}
+
 
         SaveData data = JsonUtility.FromJson<SaveData>(File.ReadAllText(savePath));
 
         Debug.Log("📥 Carregando cena salva: " + data.sceneName);
 
+        // Remove listeners antigos para evitar duplicação
         if (sceneLoadCallback != null)
             SceneManager.sceneLoaded -= sceneLoadCallback;
 
+        // Cria callback novo
         sceneLoadCallback = (scene, mode) =>
         {
             SceneManager.sceneLoaded -= sceneLoadCallback;
 
             // Player
             GameObject player = GameObject.FindGameObjectWithTag("Player");
-
             if (player != null)
             {
                 player.transform.position = new Vector2(data.playerX, data.playerY);
-
-                PlayerHealth ph = player.GetComponent<PlayerHealth>();
-                if (ph != null)
-                {
-                    ph.currentHealth = data.playerHealth;
-
-                    if (ph.currentHealth > ph.maxHealth)
-                        ph.currentHealth = ph.maxHealth;
-
-                    Debug.Log("❤️ Vida carregada: " + ph.currentHealth);
-                }
             }
 
             // Inimigos
@@ -124,15 +114,14 @@ public class SaveManager : MonoBehaviour
 
                 if (data.enemies[i].isDead && eh != null)
                 {
-                    eh.ApplyDeadStateNoScore();
+                    eh.ApplyDeadStateNoScore(); // agora sem erro
                 }
             }
 
-            Debug.Log("✔ Jogo carregado com inimigos e vida restaurados!");
+            Debug.Log("✔ Jogo carregado com inimigos restaurados!");
         };
 
         SceneManager.sceneLoaded += sceneLoadCallback;
-
         SceneManager.LoadScene(data.sceneName);
     }
 
@@ -152,6 +141,7 @@ public class SaveManager : MonoBehaviour
     {
         Time.timeScale = 1f;
 
+        // Remove listeners velhos pra evitar bug de load repetido
         if (sceneLoadCallback != null)
             SceneManager.sceneLoaded -= sceneLoadCallback;
 
@@ -159,8 +149,9 @@ public class SaveManager : MonoBehaviour
     }
 
     // ============================
-    // APAGAR SAVE
-   public void DeleteSave()
+// APAGAR SAVE (AO VENCER O JOGO)
+// ============================
+public void DeleteSave()
 {
     string path = Application.persistentDataPath + "/save.json";
 
@@ -168,10 +159,6 @@ public class SaveManager : MonoBehaviour
     {
         File.Delete(path);
         Debug.Log("🗑️ Save apagado após vitória!");
-    }
-    else
-    {
-        Debug.Log("Nenhum jogo salvo ainda");
     }
 }
 
